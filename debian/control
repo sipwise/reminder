@@ -1,0 +1,13 @@
+Source: sipwise-reminder
+Section: comm
+Priority: extra
+Maintainer: Jon Bonilla <jbonilla@sipwise.com>
+Build-Depends: debhelper (>= 5)
+Standards-Version: 3.8.4
+Homepage: http://sipwise.com/
+
+Package: sipwise-reminder
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, perl-modules, libdbi-perl, sipwise-asterisk
+Description: Reminder call scripts
+ Scripts for Sipwise reminder calls.
