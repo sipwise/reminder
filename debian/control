@@ -9,5 +9,5 @@ Homepage: http://sipwise.com/
 Package: ngcp-reminder
 Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}, perl-modules, libdbi-perl, ngcp-asterisk
-Description: Reminder call scripts
- Scripts for Sipwise reminder calls.
+Description: Reminder calls for NGCP platform
+ Scripts for generating reminder calls in a NGCP platform.
