@@ -66,7 +66,7 @@ while (my $ref = $sth->fetchrow_hashref())
 
 	print "Using tmpfile '$tmp_filename'\n";
 
-	print $tmp "Channel: SIP/$sip_peer/$ref->{'username'}\n";
+	print $tmp "Channel: SIP/$sip_peer/$ref->{'username'}__AT__$ref->{'domain'}\n";
 	print $tmp "MaxRetries: $retries\n";
 	print $tmp "RetryTime: $retry_time\n";
 	print $tmp "WaitTime: $wait_time\n";
