@@ -1,7 +1,7 @@
 Source: ngcp-reminder
 Section: comm
 Priority: extra
-Maintainer: Jon Bonilla <jbonilla@sipwise.com>
+Maintainer: Sipwise Development Team <support@sipwise.com>
 Build-Depends: debhelper (>= 5)
 Standards-Version: 3.8.4
 Homepage: http://sipwise.com/
