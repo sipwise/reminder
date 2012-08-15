@@ -1,13 +1,17 @@
 Source: ngcp-reminder
 Section: comm
 Priority: extra
-Maintainer: Jon Bonilla <jbonilla@sipwise.com>
+Maintainer: Sipwise Development Team <support@sipwise.com>
 Build-Depends: debhelper (>= 5)
-Standards-Version: 3.8.4
+Standards-Version: 3.9.3
 Homepage: http://sipwise.com/
 
 Package: ngcp-reminder
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, perl-modules, libdbi-perl, ngcp-asterisk
+Depends: libdbi-perl,
+         ngcp-asterisk,
+         perl-modules,
+         ${misc:Depends},
+         ${shlibs:Depends}
 Description: Reminder calls for NGCP platform
  Scripts for generating reminder calls in a NGCP platform.
