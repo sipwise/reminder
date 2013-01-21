@@ -1,3 +1,9 @@
+ngcp-reminder (0.2.0) unstable; urgency=low
+
+  * Make weekdays globally configurable.
+
+ -- Andreas Granig <agranig@sipwise.com>  Mon, 21 Jan 2013 15:16:39 +0100
+
 ngcp-reminder (0.1.0) unstable; urgency=low
 
   * Initial release.
