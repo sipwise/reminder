@@ -6,6 +6,7 @@ use File::Basename;
 use File::Copy;
 use DBI;
 
+our $weekdays;
 our $retries;
 our $retry_time;
 our $wait_time;
@@ -35,6 +36,11 @@ while (<CONFIG>) {
 }
 close CONFIG;
 
+if(!defined $weekdays || $weekdays =~ /^\s*$/) {
+	$weekdays = '1,2,3,4,5,6';
+}
+my @wdays = split /\s*,\s*/, $weekdays;
+
 my $dsn = "DBI:mysql:database=$database;host=$dbhost;port=0";
 
 
@@ -55,7 +61,8 @@ while (my $ref = $sth->fetchrow_hashref())
 	if($ref->{'recur'} eq "weekdays")
 	{
 		my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime(time);
-		next if($wday == 0) # only exclude sunday for now
+		$wday++; # make sun=1, sat=7
+		next unless(grep(/^$wday$/, @wdays));
 	}
 
 	my ($tmp, $tmp_filename) = tempfile("$ref->{'username'}.XXXXXX", DIR => $tmpdir, UNLINK => 0);
