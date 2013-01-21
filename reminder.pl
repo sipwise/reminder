@@ -37,7 +37,7 @@ while (<CONFIG>) {
 close CONFIG;
 
 if(!defined $weekdays || $weekdays =~ /^\s*$/) {
-	$weekdays = '1,2,3,4,5,6';
+	$weekdays = '2,3,4,5,6,7';
 }
 my @wdays = split /\s*,\s*/, $weekdays;
 
