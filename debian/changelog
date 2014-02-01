@@ -1,3 +1,9 @@
+ngcp-reminder (0.2.0+0~mr3.3) unstable; urgency=low
+
+  * New release.
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Sat, 01 Feb 2014 19:56:56 +0100
+
 ngcp-reminder (0.2.0) unstable; urgency=low
 
   * Make weekdays globally configurable.
