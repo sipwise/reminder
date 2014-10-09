@@ -1,3 +1,12 @@
+ngcp-reminder (0.5.1.0+0~mr3.5.1.0) unstable; urgency=low
+
+  [ Alexander Lutay ]
+  * [05dd30f] MT#8741 Update default cron settings for reminder
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Thu, 09 Oct 2014 16:53:27 +0200
+
 ngcp-reminder (0.5.0.0+0~mr3.5.0.0) unstable; urgency=low
 
   * New release.
