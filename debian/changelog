@@ -1,3 +1,9 @@
+ngcp-reminder (0.5.2.0+0~mr3.5.2.0) unstable; urgency=low
+
+  * New release.
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Wed, 15 Oct 2014 10:54:46 +0200
+
 ngcp-reminder (0.5.1.0+0~mr3.5.1.0) unstable; urgency=low
 
   [ Alexander Lutay ]
