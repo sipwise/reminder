@@ -8,8 +8,8 @@ Homepage: http://sipwise.com/
 
 Package: ngcp-reminder
 Architecture: all
-Depends: libdbi-perl,
-         ngcp-asterisk,
+Depends: asterisk,
+         libdbi-perl,
          perl-modules,
          ${misc:Depends},
          ${shlibs:Depends}
