@@ -81,7 +81,15 @@ while (my $ref = $sth->fetchrow_hashref())
 	print $tmp "Context: $context\n";
 	print $tmp "Priority: 1\n";
 	close $tmp;
-	move "$tmp_filename", "$spool/".basename($tmp_filename)
+
+	my $owner = 'asterisk';
+	my ($login,$pass,$uid,$gid) = getpwnam($owner)
+                    or die "user '$owner' not in passwd file";
+	chown $uid, $gid, $tmp_filename;
+	chmod 0600, $tmp_filename;
+
+	my $out_filename = "$spool/".basename($tmp_filename);
+	move "$tmp_filename", $out_filename
 		or die "Failed to move call '$tmp_filename' file to spool: $!\n";
 	
 	if($ref->{'recur'} eq "never")
