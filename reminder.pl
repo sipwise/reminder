@@ -1,10 +1,16 @@
 #!/usr/bin/perl -w
 use strict;
+use warnings;
 
+use Config::Tiny;
 use File::Temp qw(tempfile);
 use File::Basename;
 use File::Copy;
 use DBI;
+use Readonly;
+
+Readonly my $config_file => "/etc/ngcp-reminder/reminder.conf";
+Readonly my $owner => 'asterisk';
 
 our $weekdays;
 our $retries;
@@ -20,21 +26,13 @@ our $dbhost;
 our $dbuser;
 our $dbpassword;
 
+my $config = Config::Tiny->read($config_file)
+    or die "Program stopping, couldn't open the configuration file '$config_file'.\n";
 
-my $config_file = "/etc/ngcp-reminder/reminder.conf";
-open CONFIG, "$config_file" or die "Program stopping, couldn't open the configuration file '$config_file'.\n";
-
-while (<CONFIG>) {
-    chomp;                  # no newline
-    s/#.*//;                # no comments
-    s/^\s+//;               # no leading white
-    s/\s+$//;               # no trailing white
-    next unless length;     # anything left?
-    my ($var, $value) = split(/\s*=\s*/, $_, 2);
-        no strict 'refs';
-        $$var = $value;
+foreach my $key (keys %{$config->{_}}) {
+    my $c_expr = sprintf "\$%s = '%s';", $key, $config->{_}{$key};
+    eval $c_expr;
 }
-close CONFIG;
 
 if(!defined $weekdays || $weekdays =~ /^\s*$/) {
 	$weekdays = '2,3,4,5,6,7';
@@ -43,8 +41,8 @@ my @wdays = split /\s*,\s*/, $weekdays;
 
 my $dsn = "DBI:mysql:database=$database;host=$dbhost;port=0";
 
-
-my $dbh = DBI->connect($dsn, $dbuser, $dbpassword);
+my $dbh = DBI->connect($dsn, $dbuser, $dbpassword)
+    or die "Cannot connect to db: ".$DBI::errstr;
 
 my $sth = $dbh->prepare("SELECT a.username, b.domain, c.recur, c.id " .
 	"FROM voip_subscribers a, voip_domains b, voip_reminder c " .
@@ -62,7 +60,7 @@ while (my $ref = $sth->fetchrow_hashref())
 	{
 		my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime(time);
 		$wday++; # make sun=1, sat=7
-		next unless(grep(/^$wday$/, @wdays));
+		next unless grep { /^$wday$/ } @wdays;
 	}
 
 	my ($tmp, $tmp_filename) = tempfile("$ref->{'username'}.XXXXXX", DIR => $tmpdir, UNLINK => 0);
@@ -81,7 +79,14 @@ while (my $ref = $sth->fetchrow_hashref())
 	print $tmp "Context: $context\n";
 	print $tmp "Priority: 1\n";
 	close $tmp;
-	move "$tmp_filename", "$spool/".basename($tmp_filename)
+
+	my ($login,$pass,$uid,$gid) = getpwnam($owner)
+                    or die "user '$owner' not in passwd file";
+	chown $uid, $gid, $tmp_filename;
+	chmod 0600, $tmp_filename;
+
+	my $out_filename = "$spool/".basename($tmp_filename);
+	move "$tmp_filename", $out_filename
 		or die "Failed to move call '$tmp_filename' file to spool: $!\n";
 	
 	if($ref->{'recur'} eq "never")
