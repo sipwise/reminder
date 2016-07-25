@@ -10,7 +10,9 @@ Package: ngcp-reminder
 Architecture: all
 Depends:
  asterisk,
+ libconfig-tiny-perl,
  libdbi-perl,
+ libreadonly-perl,
  ${perl:Depends},
  ${misc:Depends},
 Description: Reminder calls for NGCP platform
