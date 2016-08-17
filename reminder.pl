@@ -23,7 +23,7 @@ my @wdays = split /\s*,\s*/, $cfg{weekdays};
 
 my $dsn = "DBI:mysql:database=$cfg{database};host=$cfg{dbhost};port=0";
 
-my $dbh = DBI->connect($dsn, ${cfg}{qw(dbuser dbpassword)})
+my $dbh = DBI->connect($dsn, @{cfg}{qw(dbuser dbpassword)})
     or die "Cannot connect to db: ".$DBI::errstr;
 
 my $sth = $dbh->prepare("SELECT a.username, b.domain, c.recur, c.id " .
