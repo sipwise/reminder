@@ -1,3 +1,13 @@
+ngcp-reminder (0.13.3.0+0~mr4.4.3.0) unstable; urgency=medium
+
+  [ Kirill Solomko ]
+  * [5f7c527] MT#21209 create spool file with correct owner/permissions for user asterisk
+  * [fdaa780] MT#22049 fix a dereference typo in the mysql connection string
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Fri, 30 Sep 2016 13:16:57 +0200
+
 ngcp-reminder (0.13.2.0+0~mr4.4.2.0) unstable; urgency=medium
 
   * New release.
