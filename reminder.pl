@@ -29,9 +29,10 @@ my $dbh = DBI->connect($dsn, @{cfg}{qw(dbuser dbpassword)})
 my $sth = $dbh->prepare("SELECT a.username, b.domain, c.recur, c.id " .
     "FROM voip_subscribers a, voip_domains b, voip_reminder c " .
     "WHERE c.subscriber_id = a.id and a.domain_id = b.id " .
-    "and c.time = time_format(now(), '%H:%i:00')");
+    "and c.time = time_format(now(), '%H:%i:00')" .
+    "and c.active = 1");
 
-my $sth_d = $dbh->prepare("delete from voip_reminder where id=?");
+my $sth_d = $dbh->prepare("UPDATE voip_reminder SET active=0 WHERE id=?");
 
 $sth->execute() or die "Cannot execute: ".$DBI::errstr;
 
