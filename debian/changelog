@@ -1,3 +1,12 @@
+ngcp-reminder (5.5.0.0+0~mr5.5.0.0) unstable; urgency=medium
+
+  [ Gerhard Jungwirth ]
+  * [1f000b9] TT#17258 check active flag of voip_reminders
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Mon, 17 Jul 2017 22:47:20 +0200
+
 ngcp-reminder (5.4.0.0+0~mr5.4.0.0) unstable; urgency=medium
 
   [ Guillem Jover ]
