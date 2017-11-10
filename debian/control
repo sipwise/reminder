@@ -1,8 +1,9 @@
 Source: ngcp-reminder
 Section: comm
-Priority: extra
+Priority: optional
 Maintainer: Sipwise Development Team <support@sipwise.com>
-Build-Depends: debhelper (>= 9)
+Build-Depends:
+ debhelper (>= 10),
 Standards-Version: 3.9.8
 Homepage: https://www.sipwise.com/
 
