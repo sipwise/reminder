@@ -26,11 +26,16 @@ my $dsn = "DBI:mysql:database=$cfg{database};host=$cfg{dbhost};port=0";
 my $dbh = DBI->connect($dsn, @{cfg}{qw(dbuser dbpassword)})
     or die "Cannot connect to db: ".$DBI::errstr;
 
-my $sth = $dbh->prepare("SELECT a.username, b.domain, c.recur, c.id " .
-    "FROM voip_subscribers a, voip_domains b, voip_reminder c " .
-    "WHERE c.subscriber_id = a.id and a.domain_id = b.id " .
-    "and c.time = time_format(now(), '%H:%i:00')" .
-    "and c.active = 1");
+my $sth = $dbh->prepare(<<SQL);
+SELECT a.username, b.domain, c.recur, c.id
+FROM voip_subscribers a, voip_domains b, voip_reminder c,
+     billing.v_subscriber_timezone t
+WHERE c.subscriber_id = a.id
+  AND a.domain_id = b.id
+  AND t.uuid = a.uuid
+  AND c.time = time_format(CONVERT_TZ(now(), "localtime", t.name), '%H:%i:00')
+  AND c.active = 1
+SQL
 
 my $sth_d = $dbh->prepare("UPDATE voip_reminder SET active=0 WHERE id=?");
 
