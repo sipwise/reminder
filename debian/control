@@ -14,7 +14,7 @@ Depends:
  libconfig-tiny-perl,
  libdbi-perl,
  libreadonly-perl,
- ${perl:Depends},
  ${misc:Depends},
+ ${perl:Depends},
 Description: Reminder calls for NGCP platform
  Scripts for generating reminder calls in a NGCP platform.
