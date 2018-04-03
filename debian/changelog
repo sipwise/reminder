@@ -1,3 +1,15 @@
+ngcp-reminder (6.3.0.0+0~mr6.3.0.0) unstable; urgency=medium
+
+  [ Kirill Solomko ]
+  * [5784a3e] TT#30380 add subscriber timezone support
+
+  [ Alexander Lutay ]
+  * [dbbb63c] TT#33911 Perform 'wrap-and-sort -sat'
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Tue, 03 Apr 2018 22:32:19 +0200
+
 ngcp-reminder (6.2.0.0+0~mr6.2.0.0) unstable; urgency=medium
 
   * New release.
