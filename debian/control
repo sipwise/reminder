@@ -12,6 +12,7 @@ Architecture: all
 Depends:
  asterisk,
  libconfig-tiny-perl,
+ libdbd-mysql-perl,
  libdbi-perl,
  libreadonly-perl,
  ${misc:Depends},
