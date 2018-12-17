@@ -3,16 +3,5 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-D = debian/ngcp-reminder
-
 %:
 	dh $@
-
-override_dh_install:
-	install -m 755 reminder.pl $(D)/usr/sbin/reminder
-	dh_install
-
-override_dh_installcron:
-	dh_installcron --name=reminder
-
-.PHONY: override_dh_install override_dh_installcron

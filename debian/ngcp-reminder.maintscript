@@ -1,0 +1,1 @@
+mv_conffile /etc/cron.d/reminder /etc/cron.d/ngcp-reminder 7.0.0.0+0~mr7.0.0.0~
