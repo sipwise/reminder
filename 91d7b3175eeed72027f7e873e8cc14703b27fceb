@@ -1,0 +1,10 @@
+Verified+1: Jenkins Jenkins
+Code-Review+2: Richard Fuchs <rfuchs@sipwise.com>
+Code-Review+2: Alexander Lutay <alutay@sipwise.com>
+Code-Review+2: Mykola Malkov <mmalkov@sipwise.com>
+Code-Review+2: Kirill Solomko <ksolomko@sipwise.com>
+Submitted-by: Guillem Jover <gjover@sipwise.com>
+Submitted-at: Tue, 18 Dec 2018 15:49:54 +0100
+Reviewed-on: http://gerrit.mgm.sipwise.com/25764
+Project: reminder
+Branch: refs/heads/master
