@@ -1,3 +1,10 @@
+ngcp-reminder (11.1.0.0+0~mr11.1.0.0) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [122dd72] TT#182350 refactor reminder query
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Mon, 22 Aug 2022 20:03:07 +0200
+
 ngcp-reminder (11.0.0.0+0~mr11.0.0.0) unstable; urgency=medium
 
   * New release.
