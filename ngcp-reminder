@@ -26,21 +26,34 @@ my $dsn = "DBI:mysql:database=$cfg{database};host=$cfg{dbhost};port=0";
 my $dbh = DBI->connect($dsn, @{cfg}{qw(dbuser dbpassword)})
     or die "Cannot connect to db: ".$DBI::errstr;
 my $sth = $dbh->prepare(<<SQL);
-SELECT s.username, d.domain, r.recur, r.id
+SELECT s.username, d.domain, r.recur, r.id, vup.value as lang
 FROM provisioning.voip_reminder r
 LEFT JOIN provisioning.voip_subscribers s ON r.subscriber_id = s.id
 LEFT JOIN provisioning.voip_domains d ON s.domain_id = d.id
 LEFT JOIN billing.v_subscriber_timezone tz ON tz.uuid = s.uuid
-WHERE
-r.active = 1
-AND r.time = time_format(CONVERT_TZ(now(), "localtime", tz.name), '%H:%i:00');
+LEFT JOIN provisioning.voip_usr_preferences vup ON r.subscriber_id=vup.subscriber_id
+LEFT JOIN provisioning.voip_preferences vp ON vp.id=vup.attribute_id
+WHERE r.active = 1
+AND vp.attribute = "language"
+AND r.time = time_format(CONVERT_TZ(now(), "localtime", tz.name), '%H:%i:00')
+UNION
+SELECT s.username, d.domain, r.recur, r.id, vdp.value as lang
+FROM provisioning.voip_reminder r
+LEFT JOIN provisioning.voip_subscribers s ON r.subscriber_id = s.id
+LEFT JOIN provisioning.voip_domains d ON s.domain_id = d.id
+LEFT JOIN billing.v_subscriber_timezone tz ON tz.uuid = s.uuid
+LEFT JOIN provisioning.voip_dom_preferences vdp ON vdp.domain_id=d.id
+LEFT JOIN provisioning.voip_preferences vp ON vp.id=vdp.attribute_id
+WHERE r.active = 1
+AND vp.attribute = "language"
+AND r.time = time_format(CONVERT_TZ(now(), "localtime", tz.name), '%H:%i:00') LIMIT 1;
 SQL
 my $sth_d = $dbh->prepare("UPDATE voip_reminder SET active=0 WHERE id=?");
 
 $sth->execute() or die "Cannot execute: ".$DBI::errstr;
 
 while (my $ref = $sth->fetchrow_hashref()) {
-    print "$ref->{'username'}\@$ref->{'domain'}, recur=$ref->{'recur'}\n";
+    print "$ref->{'username'}\@$ref->{'domain'}, recur=$ref->{'recur'}, language=$ref->{'lang'}\n";
 
     if ($ref->{'recur'} eq "weekdays") {
         my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime(time);
@@ -62,6 +75,7 @@ while (my $ref = $sth->fetchrow_hashref()) {
     print $tmp "Extension: s\n";
     print $tmp "Context: $cfg{context}\n";
     print $tmp "Priority: 1\n";
+    print $tmp "Setvar: LANG=$ref->{'lang'}\n";
     close $tmp;
 
     my ($login,$pass,$uid,$gid) = getpwnam($owner)
