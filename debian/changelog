@@ -1,3 +1,10 @@
+ngcp-reminder (11.3.0.0+0~mr11.3.0.0) unstable; urgency=medium
+
+  [ Fabricio Santolin da Silva ]
+  * [4aa025a] MT#51104 Send language information on subscriber to Asterisk
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Tue, 17 Jan 2023 17:44:46 +0100
+
 ngcp-reminder (11.2.0.0+0~mr11.2.0.0) unstable; urgency=medium
 
   * New release.
