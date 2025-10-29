@@ -1,101 +1,216 @@
-#!/usr/bin/perl -w
-use strict;
-use warnings;
+#!/usr/bin/env python3
+import os
+import shutil
+import tempfile
+import pwd
+import logging
+import logging.handlers
+import MySQLdb
+import configparser
+from datetime import datetime
 
-use Config::Tiny;
-use File::Temp qw(tempfile);
-use File::Basename;
-use File::Copy;
-use DBI;
-use Readonly;
+CONFIG_FILE = "/etc/ngcp-reminder/reminder.conf"
+LOG_FILE = "/var/log/ngcp/ngcp-reminder.log"
+OWNER = "asterisk"
 
-Readonly my $config_file => "/etc/ngcp-reminder/reminder.conf";
-Readonly my $owner => 'asterisk';
+# --- Logging setup -----------------------------------------------------------
+SYSLOG_ADDRESS = '/dev/log'  # Standard Unix socket for local syslog
 
-my $config = Config::Tiny->read($config_file)
-    or die "Program stopping, couldn't open the configuration file '$config_file'.\n";
-my %cfg = ( %{$config->{_}} );
+logger = logging.getLogger("ngcp-reminder")
+logger.setLevel(logging.INFO)
 
-if (!defined $cfg{weekdays} || $cfg{weekdays} =~ /^\s*$/) {
-    $cfg{weekdays} = '2,3,4,5,6,7';
-}
-my @wdays = split /\s*,\s*/, $cfg{weekdays};
+# Syslog handler (facility local0)
+syslog_handler = logging.handlers.SysLogHandler(
+    address=SYSLOG_ADDRESS,
+    facility=logging.handlers.SysLogHandler.LOG_LOCAL0
+)
+syslog_formatter = logging.Formatter('%(name)s: [%(levelname)s] %(message)s')
+syslog_handler.setFormatter(syslog_formatter)
+logger.addHandler(syslog_handler)
 
-my $dsn = "DBI:mysql:database=$cfg{database};host=$cfg{dbhost};port=0";
+# File handler (optional fallback)
+file_handler = logging.FileHandler(LOG_FILE)
+file_formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
+file_handler.setFormatter(file_formatter)
+logger.addHandler(file_handler)
 
-my $dbh = DBI->connect($dsn, @{cfg}{qw(dbuser dbpassword)})
-    or die "Cannot connect to db: ".$DBI::errstr;
-my $sth = $dbh->prepare(<<SQL);
-SELECT s.username, d.domain, r.recur, r.id, vup.value as lang
-FROM provisioning.voip_reminder r
-LEFT JOIN provisioning.voip_subscribers s ON r.subscriber_id = s.id
-LEFT JOIN provisioning.voip_domains d ON s.domain_id = d.id
-LEFT JOIN billing.v_subscriber_timezone tz ON tz.uuid = s.uuid
-LEFT JOIN provisioning.voip_usr_preferences vup ON r.subscriber_id=vup.subscriber_id
-LEFT JOIN provisioning.voip_preferences vp ON vp.id=vup.attribute_id
-WHERE r.active = 1
-AND vp.attribute = "language"
-AND r.time = time_format(CONVERT_TZ(now(), "localtime", tz.name), '%H:%i:00')
-UNION
-SELECT s.username, d.domain, r.recur, r.id, vdp.value as lang
-FROM provisioning.voip_reminder r
-LEFT JOIN provisioning.voip_subscribers s ON r.subscriber_id = s.id
-LEFT JOIN provisioning.voip_domains d ON s.domain_id = d.id
-LEFT JOIN billing.v_subscriber_timezone tz ON tz.uuid = s.uuid
-LEFT JOIN provisioning.voip_dom_preferences vdp ON vdp.domain_id=d.id
-LEFT JOIN provisioning.voip_preferences vp ON vp.id=vdp.attribute_id
-WHERE r.active = 1
-AND vp.attribute = "language"
-AND r.time = time_format(CONVERT_TZ(now(), "localtime", tz.name), '%H:%i:00') LIMIT 1;
-SQL
-my $sth_d = $dbh->prepare("UPDATE voip_reminder SET active=0 WHERE id=?");
 
-$sth->execute() or die "Cannot execute: ".$DBI::errstr;
+# --- Configuration reader ----------------------------------------------------
+def read_config(path):
+    """Read key=value configuration file without section headers."""
+    parser = configparser.ConfigParser()
+    with open(path) as f:
+        data = f.read()
+    parser.read_string("[DEFAULT]\n" + data)
+    return parser["DEFAULT"]
 
-while (my $ref = $sth->fetchrow_hashref()) {
-    print "$ref->{'username'}\@$ref->{'domain'}, recur=$ref->{'recur'}, language=$ref->{'lang'}\n";
 
-    if ($ref->{'recur'} eq "weekdays") {
-        my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime(time);
-        $wday++; # make sun=1, sat=7
-        next unless grep { /^$wday$/ } @wdays;
-    }
+# --- Database connection -----------------------------------------------------
+def connect_db(cfg):
+    """Establish a connection to the MySQL database."""
+    try:
+        db = MySQLdb.connect(
+            host=cfg.get("dbhost", "localhost"),
+            user=cfg.get("dbuser"),
+            passwd=cfg.get("dbpassword"),
+            db=cfg.get("database"),
+        )
+        return db
+    except Exception as e:
+        logger.error(f"Database connection failed: {e}")
+        raise
 
-    my ($tmp, $tmp_filename) = tempfile("$ref->{'username'}.XXXXXX", DIR => $cfg{tmpdir}, UNLINK => 0);
-    unless (defined $tmp) {
-        die "Failed to create temporary call file: $!\n";
-    }
 
-    print "Using tmpfile '$tmp_filename'\n";
+# --- Call file creation ------------------------------------------------------
+def create_call_file(
+    cfg,
+    username,
+    domain,
+    lang,
+    recur,
+    reminder_id,
+    weekdays
+):
+    """Create an Asterisk .call file based on the reminder configuration."""
+    tmpdir = cfg.get("tmpdir", "/tmp")
+    spool = cfg.get("spool", "/var/spool/asterisk/outgoing")
 
-    print $tmp "Channel: SIP/$cfg{sip_peer}/$ref->{'username'}__AT__$ref->{'domain'}\n";
-    print $tmp "MaxRetries: $cfg{retries}\n";
-    print $tmp "RetryTime: $cfg{retry_time}\n";
-    print $tmp "WaitTime: $cfg{wait_time}\n";
-    print $tmp "Extension: s\n";
-    print $tmp "Context: $cfg{context}\n";
-    print $tmp "Priority: 1\n";
-    print $tmp "Setvar: LANG=$ref->{'lang'}\n";
-    close $tmp;
+    # Normalize PJSIP peer name
+    peer = cfg.get("sip_peer", "sip_proxy_ep")
+    if not peer.upper().startswith(("SIP/", "PJSIP/")):
+        peer = f"PJSIP/{peer}"
 
-    my ($login,$pass,$uid,$gid) = getpwnam($owner)
-                                    or die "user '$owner' not in passwd file";
-    chown $uid, $gid, $tmp_filename;
-    chmod 0600, $tmp_filename;
+    tmp_prefix = f"{username}__AT__{domain}."
+    fd, tmp_filename = tempfile.mkstemp(
+        prefix=tmp_prefix,
+        dir=tmpdir,
+        text=True
+    )
+    os.close(fd)
 
-    my $out_filename = "$cfg{spool}/".basename($tmp_filename);
-    move "$tmp_filename", $out_filename
-        or die "Failed to move call '$tmp_filename' file to spool: $!\n";
+    try:
+        # Write call file content
+        with open(tmp_filename, "w") as f:
+            f.write(f"Channel: {peer}/sip:{username}@{domain}\n")
+            f.write(f"MaxRetries: {cfg.get('retries', '2')}\n")
+            f.write(f"RetryTime: {cfg.get('retry_time', '60')}\n")
+            f.write(f"WaitTime: {cfg.get('wait_time', '30')}\n")
+            f.write("Extension: s\n")
+            f.write(f"Context: {cfg.get('context', 'reminder')}\n")
+            f.write("Priority: 1\n")
+            f.write(f"Setvar: LANG={lang or 'en'}\n")
 
-    if($ref->{'recur'} eq "never") {
-        $sth_d->execute($ref->{'id'})
-            or die "Cannot execute: ".$DBI::errstr;
-    }
-}
+        # Set file ownership and permissions
+        uid = pwd.getpwnam(OWNER).pw_uid
+        gid = pwd.getpwnam(OWNER).pw_gid
+        os.chown(tmp_filename, uid, gid)
+        os.chmod(tmp_filename, 0o600)
 
-$sth->finish;
-$sth_d->finish;
+        # Read back for logging
+        with open(tmp_filename, "r") as f:
+            content = f.read()
 
-$dbh->disconnect;
+        final_path = os.path.join(spool, os.path.basename(tmp_filename))
+        shutil.move(tmp_filename, final_path)
 
-exit 0;
+        logger.info(
+            f"Created call file: {final_path}\n"
+            "--- File content ---\n"
+            f"{content}\n"
+            "--------------------"
+        )
+
+    except Exception as e:
+        logger.error(f"Error creating call file for {username}@{domain}: {e}")
+        if os.path.exists(tmp_filename):
+            os.remove(tmp_filename)
+
+
+# --- Main logic --------------------------------------------------------------
+def main():
+    """Main execution logic for the NGCP reminder system."""
+    cfg = read_config(CONFIG_FILE)
+    weekdays = [
+        w.strip()
+        for w in cfg.get("weekdays", "2,3,4,5,6,7").split(",")
+    ]
+
+    db = connect_db(cfg)
+    cur = db.cursor(MySQLdb.cursors.DictCursor)
+
+    sql = """
+    SELECT s.username, d.domain, r.recur, r.id, vup.value as lang
+    FROM provisioning.voip_reminder r
+    LEFT JOIN provisioning.voip_subscribers s ON r.subscriber_id = s.id
+    LEFT JOIN provisioning.voip_domains d ON s.domain_id = d.id
+    LEFT JOIN billing.v_subscriber_timezone tz ON tz.uuid = s.uuid
+    LEFT JOIN provisioning.voip_usr_preferences vup
+    ON r.subscriber_id=vup.subscriber_id
+    LEFT JOIN provisioning.voip_preferences vp ON vp.id=vup.attribute_id
+    WHERE r.active = 1
+      AND vp.attribute = "language"
+      AND r.time =
+        time_format(CONVERT_TZ(now(), "localtime", tz.name), '%H:%i:00')
+    UNION
+    SELECT s.username, d.domain, r.recur, r.id, vdp.value as lang
+    FROM provisioning.voip_reminder r
+    LEFT JOIN provisioning.voip_subscribers s ON r.subscriber_id = s.id
+    LEFT JOIN provisioning.voip_domains d ON s.domain_id = d.id
+    LEFT JOIN billing.v_subscriber_timezone tz ON tz.uuid = s.uuid
+    LEFT JOIN provisioning.voip_dom_preferences vdp ON vdp.domain_id=d.id
+    LEFT JOIN provisioning.voip_preferences vp ON vp.id=vdp.attribute_id
+    AND r.time =
+        time_format(CONVERT_TZ(now(), "localtime", tz.name), '%H:%i:00')
+    WHERE r.active = 1
+      AND vp.attribute = "language"
+    LIMIT 100;
+    """
+
+    cur.execute(sql)
+    rows = cur.fetchall()
+
+    for ref in rows:
+        username = ref["username"]
+        domain = ref["domain"]
+        recur = ref["recur"]
+        lang = ref.get("lang", "en")
+        reminder_id = ref["id"]
+
+        # Weekday check for recurring reminders
+        if recur == "weekdays":
+            datetime.now(timezone.utc).isoweekday()
+            if str(wday) not in weekdays:
+                continue
+
+        create_call_file(
+            cfg,
+            username,
+            domain,
+            lang,
+            recur,
+            reminder_id,
+            weekdays
+        )
+
+        # Disable one-time reminders
+        if recur == "never":
+            cur2 = db.cursor()
+            cur2.execute(
+                "UPDATE voip_reminder SET active=0 WHERE id=%s",
+                (reminder_id,)
+            )
+            cur2.close()
+            db.commit()
+
+    cur.close()
+    db.close()
+    logger.info("Reminder cycle completed successfully.")
+
+
+# --- Entry point -------------------------------------------------------------
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        logger.exception(f"Unhandled exception: {e}")
+        raise
