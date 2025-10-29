@@ -11,10 +11,8 @@ Package: ngcp-reminder
 Architecture: all
 Depends:
  asterisk,
- libconfig-tiny-perl,
- libdbd-mysql-perl,
- libdbi-perl,
- libreadonly-perl,
+ python3,
+ python3-mysqldb,
  ${misc:Depends},
  ${perl:Depends},
 Description: reminder calls for NGCP platform
