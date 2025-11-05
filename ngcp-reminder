@@ -7,7 +7,7 @@ import logging
 import logging.handlers
 import MySQLdb
 import configparser
-from datetime import datetime
+from datetime import datetime, timezone
 
 CONFIG_FILE = "/etc/ngcp-reminder/reminder.conf"
 LOG_FILE = "/var/log/ngcp/ngcp-reminder.log"
@@ -178,7 +178,7 @@ def main():
 
         # Weekday check for recurring reminders
         if recur == "weekdays":
-            datetime.now(timezone.utc).isoweekday()
+            wday = datetime.now(timezone.utc).isoweekday()
             if str(wday) not in weekdays:
                 continue
 
