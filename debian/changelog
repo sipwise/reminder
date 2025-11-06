@@ -1,3 +1,11 @@
+ngcp-reminder (13.0.1.2+0~mr13.0.1.2) unstable; urgency=medium
+
+  [ Alessio Garzi ]
+  * [96fb28d] MT#63353 Rewrite ngcp-remainder in python3
+  * [6d1ae97] MT#63353 Add timezone import in reminder
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Thu, 06 Nov 2025 10:33:55 +0100
+
 ngcp-reminder (13.0.1.1+0~mr13.0.1.1) unstable; urgency=medium
 
   * New release.
