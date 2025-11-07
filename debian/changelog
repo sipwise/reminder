@@ -1,3 +1,12 @@
+ngcp-reminder (12.5.1.3+0~mr12.5.1.3) unstable; urgency=medium
+
+  [ Alessio Garzi ]
+  * [425aac7] MT#63353 Add timezone import in reminder
+  * [5acf683] MT#63353 Force permissions to 640 for log file
+  * [8d33c93] MT#63353 Force root:adm as owner of ngcp-reminder.log
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Fri, 07 Nov 2025 17:28:57 +0100
+
 ngcp-reminder (12.5.1.2+0~mr12.5.1.2) unstable; urgency=medium
 
   [ Alessio Garzi ]
