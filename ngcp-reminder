@@ -8,13 +8,22 @@ import logging.handlers
 import MySQLdb
 import configparser
 from datetime import datetime, timezone
+import grp
 
 CONFIG_FILE = "/etc/ngcp-reminder/reminder.conf"
 LOG_FILE = "/var/log/ngcp/ngcp-reminder.log"
-OWNER = "asterisk"
+OWNER = "root"
 
 # --- Logging setup -----------------------------------------------------------
 SYSLOG_ADDRESS = '/dev/log'  # Standard Unix socket for local syslog
+
+# Ensure proper permissions and ownership for the log file
+if not os.path.exists(LOG_FILE):
+    open(LOG_FILE, "w").close()
+    uid = pwd.getpwnam(OWNER).pw_uid
+    gid = grp.getgrnam('adm').gr_gid
+    os.chown(LOG_FILE, uid, gid)
+    os.chmod(LOG_FILE, 0o640)  # rw-r-----
 
 logger = logging.getLogger("ngcp-reminder")
 logger.setLevel(logging.INFO)
@@ -33,16 +42,6 @@ file_handler = logging.FileHandler(LOG_FILE)
 file_formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
 file_handler.setFormatter(file_formatter)
 logger.addHandler(file_handler)
-
-# Ensure proper permissions and ownership for the log file
-try:
-    if os.path.exists(LOG_FILE):
-        uid = pwd.getpwnam(OWNER).pw_uid
-        gid = pwd.getpwnam(OWNER).pw_gid
-        os.chown(LOG_FILE, uid, gid)
-        os.chmod(LOG_FILE, 0o640)  # rw-r-----
-except Exception as e:
-    logger.warning(f"Unable to set log file ownership or permissions: {e}")
 
 
 # --- Configuration reader ----------------------------------------------------
