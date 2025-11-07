@@ -34,6 +34,16 @@ file_formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
 file_handler.setFormatter(file_formatter)
 logger.addHandler(file_handler)
 
+# Ensure proper permissions and ownership for the log file
+try:
+    if os.path.exists(LOG_FILE):
+        uid = pwd.getpwnam(OWNER).pw_uid
+        gid = pwd.getpwnam(OWNER).pw_gid
+        os.chown(LOG_FILE, uid, gid)
+        os.chmod(LOG_FILE, 0o640)  # rw-r-----
+except Exception as e:
+    logger.warning(f"Unable to set log file ownership or permissions: {e}")
+
 
 # --- Configuration reader ----------------------------------------------------
 def read_config(path):
