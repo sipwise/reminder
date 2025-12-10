@@ -12,7 +12,8 @@ import grp
 
 CONFIG_FILE = "/etc/ngcp-reminder/reminder.conf"
 LOG_FILE = "/var/log/ngcp/ngcp-reminder.log"
-OWNER = "root"
+OWNERLOGFILE = "root"
+OWNERTMPFILE = "asterisk"
 
 # --- Logging setup -----------------------------------------------------------
 SYSLOG_ADDRESS = '/dev/log'  # Standard Unix socket for local syslog
@@ -20,7 +21,7 @@ SYSLOG_ADDRESS = '/dev/log'  # Standard Unix socket for local syslog
 # Ensure proper permissions and ownership for the log file
 if not os.path.exists(LOG_FILE):
     open(LOG_FILE, "w").close()
-    uid = pwd.getpwnam(OWNER).pw_uid
+    uid = pwd.getpwnam(OWNERLOGFILE).pw_uid
     gid = grp.getgrnam('adm').gr_gid
     os.chown(LOG_FILE, uid, gid)
     os.chmod(LOG_FILE, 0o640)  # rw-r-----
@@ -111,8 +112,8 @@ def create_call_file(
             f.write(f"Setvar: LANG={lang or 'en'}\n")
 
         # Set file ownership and permissions
-        uid = pwd.getpwnam(OWNER).pw_uid
-        gid = pwd.getpwnam(OWNER).pw_gid
+        uid = pwd.getpwnam(OWNERTMPFILE).pw_uid
+        gid = pwd.getpwnam(OWNERTMPFILE).pw_gid
         os.chown(tmp_filename, uid, gid)
         os.chmod(tmp_filename, 0o600)
 
