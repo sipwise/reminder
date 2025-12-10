@@ -33,7 +33,8 @@ syslog_handler = logging.handlers.SysLogHandler(
     address=SYSLOG_ADDRESS,
     facility=logging.handlers.SysLogHandler.LOG_LOCAL0
 )
-syslog_formatter = logging.Formatter('%(name)s: [%(levelname)s] %(message)s')
+syslog_formatter = logging.Formatter(
+        'ngcp-reminder: [%(levelname)s] %(message)s')
 syslog_handler.setFormatter(syslog_formatter)
 logger.addHandler(syslog_handler)
 
