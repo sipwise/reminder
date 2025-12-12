@@ -1,3 +1,11 @@
+ngcp-reminder (12.5.1.4+0~mr12.5.1.4) unstable; urgency=medium
+
+  [ Alessio Garzi ]
+  * [a22a5f7] MT#64092 Put ngcp-reminder in front of log message
+  * [6fa1216] MT#64092  Differentiate owner of logfile with the call file
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Fri, 12 Dec 2025 09:06:04 +0100
+
 ngcp-reminder (12.5.1.3+0~mr12.5.1.3) unstable; urgency=medium
 
   [ Alessio Garzi ]
