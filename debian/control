@@ -1,6 +1,5 @@
 Source: ngcp-reminder
 Section: comm
-Priority: optional
 Maintainer: Sipwise Development Team <support@sipwise.com>
 Build-Depends:
  debhelper-compat (= 13),
