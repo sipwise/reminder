@@ -1,3 +1,14 @@
+ngcp-reminder (14.2.0.0+0~mr14.2.0.0) unstable; urgency=medium
+
+  [ Alessio Garzi ]
+  * [86f8609] MT#64092 Put ngcp-reminder in front of log message
+  * [62ebe2f] MT#64092  Differentiate owner of logfile with the call file
+
+  [ Guillem Jover ]
+  * [92cbb31] MT#62899 Update packaging for Debian trixie
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Thu, 05 Feb 2026 10:24:21 +0100
+
 ngcp-reminder (14.1.0.0+0~mr14.1.0.0) unstable; urgency=medium
 
   [ Alessio Garzi ]
